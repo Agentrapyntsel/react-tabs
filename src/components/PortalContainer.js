@@ -1,74 +1,61 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MyWindowPortal } from "./WindowPortal";
 
+export const PortalContainer = (props) => {
+	const [counter, setCounter] = useState(props.startValueCounter)
+	const [showWindowPortal, setShowWindportal] = useState(false)
+	const [showWindow, setShowWindow] = useState(true)
 
-export class PortalContainer extends React.PureComponent {
-	constructor(props) {
-		super(props);
-		this.state = {
-			counter: this.props.startValueCounter,
-			showWindowPortal: false,
-			showWindow: true,
-		};
-		this.toggleWindowPortal = this.toggleWindowPortal.bind(this);
-		this.closeWindowPortal = this.closeWindowPortal.bind(this);
-	}
 
-	componentDidMount() {
+	useEffect(() => {
 		window.addEventListener('beforeunload', () => {
-			this.closeWindowPortal();
+			closeWindowPortal();
 		});
+		const clearIdentificator = setInterval(() => {
+			setCounter(c => c + 1);
+		}, 2000);
+		return () => {
+			clearInterval(clearIdentificator);
+		}
+	}, [counter]);
 
-		window.setInterval(() => {
-			this.setState(state => ({
-				counter: state.counter + 1,
-			}));
-		}, 1000);
+	const toggleWindowPortal = () => {
+		setShowWindportal(!showWindowPortal);
+	}
+	const closeWindow = () => {
+		setShowWindow(false)
+	}
+	const closeWindowPortal = () => {
+		setShowWindportal(false)
 	}
 
-	toggleWindowPortal() {
-		this.setState(state => ({
-			...state,
-			showWindowPortal: !state.showWindowPortal,
-		}));
-	}
+	return (
+		showWindow &&
+		<div className='portal-container'>
+			<h1>{props.counterTitle} {counter}</h1>
 
-	closeWindow() {
-		this.setState({ showWindow: false })
-	}
+			<button onClick={toggleWindowPortal}>
+				{showWindowPortal ? 'Close the' : 'Open a'} Portal
+			</button>
 
-	closeWindowPortal() {
-		this.setState({ showWindowPortal: false })
-	}
-
-	render() {
-		return (
-			this.state.showWindow &&
-			<div className='portal-container'>
-				<h1>{this.props.counter} {this.state.counter}</h1>
-
-				<button onClick={this.toggleWindowPortal}>
-					{this.state.showWindowPortal ? 'Close the' : 'Open a'} Portal
-				</button>
-
-				{this.state.showWindowPortal && (
-					<MyWindowPortal closeWindowPortal={this.closeWindowPortal} >
-						<div className='portal-container'>
-							<h1>Counter in a portal: {this.state.counter}</h1>
-							<p>Even though I render in a different window, I share state!</p>
-							<div className='portal-btncontainer'>
-								<button className='btn' onClick={() => this.closeWindow()} >
-									Close me!
-								</button>
-								<button onClick={() => this.toggleWindowPortal()} >
-									Return me!
-								</button>
-							</div>
+			{showWindowPortal && (
+				<MyWindowPortal closeWindowPortal={closeWindowPortal} >
+					<div className='portal-container'>
+						<h1>Counter in a portal: {counter}</h1>
+						<p>Even though I render in a different window, I share state!</p>
+						<div className='portal-btncontainer'>
+							<button className='btn' onClick={() => closeWindow()} >
+								Close me!
+							</button>
+							<button onClick={() => toggleWindowPortal()} >
+								Return me!
+							</button>
 						</div>
-					</MyWindowPortal>
-				)}
-			</div>
+					</div>
+				</MyWindowPortal>
+			)}
+		</div>
 
-		);
-	}
+	);
+
 }
